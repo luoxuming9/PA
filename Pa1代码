@@ -1,0 +1,127 @@
+typedef struct {
+  union {
+  	union{
+    uint32_t _32;
+    uint16_t _16;
+    uint8_t _8[2];
+  } gpr[8];
+
+  /* Do NOT change the order of the GPRs' definitions. */
+
+  /* In NEMU, rtlreg_t is exactly uint32_t. This makes RTL instructions
+   * in PA2 able to directly access these registers.
+   */
+  struct{
+  	uint32_t eax;
+        uint32_t ecx;
+        uint32_t edx;
+        uint32_t ebx;
+        uint32_t esp;
+        uint32_t ebp;
+        uint32_t esi;
+        uint32_t edi;
+  };
+
+};
+  vaddr_t eip;
+
+} CPU_state;
+
+
+
+
+static struct {
+  char *name;
+  char *description;
+  int (*handler) (char *);
+} cmd_table [] = {
+  { "help", "Display informations about all supported commands", cmd_help },
+  { "c", "Continue the execution of the program", cmd_c },
+  { "q", "Exit NEMU", cmd_q },
+  { "si","Dan Bu Zhi Xing", cmd_si},
+  { "info", "Da Yin Cheng Xun", cmd_info},
+  { "x", "Sao Miao Nei Cun",cmd_x},
+
+
+static int cmd_si(char *args){   
+    // TODO: 利用 strtok 读取出 N
+	char *arg = strtok(args," ");
+    // printf("%s\n",arg);
+    if(arg == NULL){
+        printf("fail\n");
+        return 1;
+    }
+    int num = atoi(arg);
+    // TODO: 然后根据 N 来执行对应的 cpu_exec(N) 操作
+	cpu_exec(num);
+    printf("complete");
+    return 0;
+};
+
+
+
+static int cmd_info(char *args){
+    // 分割字符
+	char *arg = strtok(args," ");
+    printf("%s\n",arg);
+    // 判断子命令是否是r
+    if (strcmp(arg,"r")==0){
+        printf("eax is %x\n",cpu.eax);
+        printf("ecx is %x\n",cpu.ecx);
+        printf("edx is %x\n",cpu.edx);
+        printf("ebx is %x\n",cpu.ebx);
+        printf("esp is %x\n",cpu.esp);
+        printf("ebp is %x\n",cpu.ebp); 
+        printf("esi is %x\n",cpu.esi);
+        printf("edi is %x\n",cpu.edi);
+        printf("---------------------------\n");
+        // 依次打印所有寄存器
+        // 这里给个例子：打印出 eax 寄存器的值
+    }
+
+    return 0;
+}  
+
+
+static int cmd_x(char *args){
+    if(args == NULL){
+        printf("fail \n");
+        return 1;
+    }
+     
+    char *arg = strtok(args," ");
+    if(arg == NULL){
+        printf("fail \n");
+        return 1;
+    }
+    int  n = atoi(arg);
+    char *EXPR = strtok(NULL," ");
+    if(EXPR == NULL){                                                                                                                                          
+        printf("fail \n");
+        return 1;
+    }
+    if(strtok(NULL," ")!=NULL){
+        printf("fail \n");
+        return 1;
+    }
+    bool success = true;
+    if (success!=true){
+        printf("fail\n");
+        return 1;
+    }
+    char *str;
+    //循环使用 vaddr_read 函数来读取内存
+    vaddr_t addr =  strtol( EXPR,&str,16 );
+    for(int i = 0 ; i < n ; i++){
+        uint32_t data = vaddr_read(addr + i * 4,4);//如何调用，怎么传递参数，请阅读代码
+        printf("0x%08x  " , addr + i * 4 );
+        //每次循环将读取到的数据用 printf 打印出来
+        for(int j =0 ; j < 4 ; j++){
+            printf("0x%02x " , data & 0xff);
+            data = data >> 8 ;
+        }
+        printf("\n");//如果你不知道应该打印什么，可以参考参考输出形式
+    }
+     
+    return 0;
+}
